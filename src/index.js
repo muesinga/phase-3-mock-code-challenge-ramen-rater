@@ -1,7 +1,8 @@
 // write your code here
 const ramenMenu = document.querySelector("div#ramen-menu")
+const ramenDetail = document.querySelector("div#ramen-detail")
+const ratingForm = document.querySelector("form#ramen-rating")
 
-function renderAllRamens() {
 fetch ('http://localhost:3000/ramens')
     .then(resp => resp.json())
     .then(data => {
@@ -9,7 +10,6 @@ fetch ('http://localhost:3000/ramens')
             renderOneNoodle(ramenObj)
         })
     })
-}
 
 function renderOneNoodle(ramenObj) {
     const div = document.createElement('div')
@@ -23,14 +23,36 @@ function renderOneNoodle(ramenObj) {
 }
 
 ramenMenu.addEventListener('click', function (event){
-    const name = event.target.parentNode.dataset.id.name
-    const restaurant = event.target.parentNode.dataset.id.restaurant
-    const image = event.target.parentNode.dataset.id.image
     fetch(`http://localhost:3000/ramens/${event.target.parentNode.dataset.id}`)
         .then(resp => resp.json())
-        .then(data => console.log(data))
-    console.log(name)
+        .then(ramenObj => {
+            ramenDetail.querySelector('img.detail-image').src = ramenObj.image
+            ramenDetail.querySelector("h2.name").textContent = ramenObj.name
+            ramenDetail.querySelector("h3.restaurant").textContent = ramenObj.restaurant
+            ratingForm.querySelector("input#rating").value = ramenObj.rating
+            ratingForm.querySelector("textarea#comment").innerText = ramenObj.comment
+            ratingForm.dataset.id = ramenObj.id
+        })
 })
 
-
-renderAllRamens()
+ratingForm.addEventListener('submit', event => {
+    event.preventDefault()
+    const id = event.target.dataset.id
+    fetch(`http://localhost:3000/ramens/${id}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type':'application/json',
+            'Accept':'application/json'
+        },
+        body: JSON.stringify({rating:event.target.rating.value, comment:event.target.comment.value})
+    })
+    .then(response => response.json())
+    .then(ramenObj => {
+        ramenDetail.querySelector('img.detail-image').src = ramenObj.image
+        ramenDetail.querySelector("h2.name").textContent = ramenObj.name
+        ramenDetail.querySelector("h3.restaurant").textContent = ramenObj.restaurant
+        ratingForm.querySelector("input#rating").value = ramenObj.rating
+        ratingForm.querySelector("textarea#comment").innerText = ramenObj.comment
+        ratingForm.dataset.id = ramenObj.id
+    })
+})
